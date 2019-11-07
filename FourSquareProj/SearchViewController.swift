@@ -9,8 +9,12 @@
 import UIKit
 import MapKit
 
-class ViewController: UIViewController {
+class SearchViewController: UIViewController {
   
+    @IBOutlet weak var foodSearchBar: UISearchBar!
+    @IBOutlet weak var locationSearchBar: UISearchBar!
+    @IBOutlet weak var mapOutlet: MKMapView!
+    @IBOutlet weak var collectionOutlet: UICollectionView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,4 +23,3 @@ class ViewController: UIViewController {
 
 
 }
-
