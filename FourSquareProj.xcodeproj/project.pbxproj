@@ -17,6 +17,10 @@
 		85E3BFEB2374BDAB00BD3AB4 /* SearchCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFEA2374BDAB00BD3AB4 /* SearchCollectionViewCell.swift */; };
 		85E3BFED2374BE1100BD3AB4 /* CollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFEC2374BE1100BD3AB4 /* CollectionViewController.swift */; };
 		85E3BFEF2374BE3000BD3AB4 /* CollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFEE2374BE3000BD3AB4 /* CollectionViewCell.swift */; };
+		85E3BFF12374CE6300BD3AB4 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFF02374CE6300BD3AB4 /* NetworkManager.swift */; };
+		85E3BFF32374CF0A00BD3AB4 /* SaveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFF22374CF0A00BD3AB4 /* SaveManager.swift */; };
+		85E3BFF52374CF1900BD3AB4 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFF42374CF1900BD3AB4 /* Location.swift */; };
+		85E3BFF72374CF3400BD3AB4 /* APIModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E3BFF62374CF3400BD3AB4 /* APIModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +48,10 @@
 		85E3BFEA2374BDAB00BD3AB4 /* SearchCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCollectionViewCell.swift; sourceTree = "<group>"; };
 		85E3BFEC2374BE1100BD3AB4 /* CollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewController.swift; sourceTree = "<group>"; };
 		85E3BFEE2374BE3000BD3AB4 /* CollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewCell.swift; sourceTree = "<group>"; };
+		85E3BFF02374CE6300BD3AB4 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
+		85E3BFF22374CF0A00BD3AB4 /* SaveManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveManager.swift; sourceTree = "<group>"; };
+		85E3BFF42374CF1900BD3AB4 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
+		85E3BFF62374CF3400BD3AB4 /* APIModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +95,10 @@
 			children = (
 				85E3BF8E23736A5000BD3AB4 /* AppDelegate.swift */,
 				85E3BF9023736A5000BD3AB4 /* SceneDelegate.swift */,
+				85E3BFF02374CE6300BD3AB4 /* NetworkManager.swift */,
+				85E3BFF22374CF0A00BD3AB4 /* SaveManager.swift */,
+				85E3BFF42374CF1900BD3AB4 /* Location.swift */,
+				85E3BFF62374CF3400BD3AB4 /* APIModel.swift */,
 				85E3BF9223736A5000BD3AB4 /* SearchViewController.swift */,
 				85E3BFEA2374BDAB00BD3AB4 /* SearchCollectionViewCell.swift */,
 				85E3BFEC2374BE1100BD3AB4 /* CollectionViewController.swift */,
@@ -212,8 +224,12 @@
 				85E3BF9323736A5000BD3AB4 /* SearchViewController.swift in Sources */,
 				85E3BF8F23736A5000BD3AB4 /* AppDelegate.swift in Sources */,
 				85E3BFEF2374BE3000BD3AB4 /* CollectionViewCell.swift in Sources */,
+				85E3BFF12374CE6300BD3AB4 /* NetworkManager.swift in Sources */,
+				85E3BFF72374CF3400BD3AB4 /* APIModel.swift in Sources */,
+				85E3BFF52374CF1900BD3AB4 /* Location.swift in Sources */,
 				85E3BFEB2374BDAB00BD3AB4 /* SearchCollectionViewCell.swift in Sources */,
 				85E3BF9123736A5000BD3AB4 /* SceneDelegate.swift in Sources */,
+				85E3BFF32374CF0A00BD3AB4 /* SaveManager.swift in Sources */,
 				85E3BFED2374BE1100BD3AB4 /* CollectionViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
