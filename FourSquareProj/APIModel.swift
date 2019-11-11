@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import UIKit
+import CoreLocation
 
 struct Location: Codable {
     let response: Response
@@ -64,4 +66,33 @@ struct LocationClass: Codable {
     let state: String
     let country: String
     let formattedAddress: [String]
+}
+
+final class APIManager {
+    private init() {}
+    static let shared = APIManager()
+    
+    func getCategories(search: String, completionHandler: @escaping (Result<[Card], AppError>) -> Void) {
+        let urlStr = "https://api.foursquare.com/v2/venues/explore?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20180323&limit=15&ll=40.7243,-74.0018&query=\(search)"
+
+
+         guard let url = URL(string: urlStr) else {
+             completionHandler(.failure(.badURL))
+             return
+         }
+         
+         NetworkHelper.manager.performDataTask(withUrl: url, andMethod: .get) { (result) in
+             switch result {
+             case .failure(let error) :
+                 completionHandler(.failure(error))
+             case .success(let data):
+                 do {
+                     let FlashCardWrapper = try JSONDecoder().decode(Location.self, from: data)
+                    completionHandler(.success(FlashCardWrapper.cards))
+                 } catch {
+                     completionHandler(.failure(.couldNotParseJSON(rawError: error)))
+                 }
+             }
+         }
+     }
 }
