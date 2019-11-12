@@ -43,8 +43,12 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let foods = food[indexPath.row]
+        guard let cell = collectionOutlet.dequeueReusableCell(withReuseIdentifier: "searchCell", for: indexPath) as? SearchCollectionViewCell else{return UICollectionViewCell()}
         
-        return UICollectionViewCell()
+        
+        
+        return cell
     }
     
     //MARK: SearchBar
@@ -74,7 +78,11 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     
     
     
-    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadLatLong()
+        loadData()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -98,7 +106,14 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     }
     
     func loadData(){
-        
+        APIManager.shared.getCategories(search: foodSearchString ?? "chinese dumplings", lat: latitude, long: longitude) { (result) in
+            switch result {
+            case .failure(let error):
+                print(error)
+            case .success(let food):
+                self.food = [food]
+            }
+        }
     }
 
 
