@@ -72,10 +72,9 @@ final class APIManager {
     private init() {}
     static let shared = APIManager()
     
-    func getCategories(search: String, completionHandler: @escaping (Result<[Card], AppError>) -> Void) {
-        let urlStr = "https://api.foursquare.com/v2/venues/explore?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20180323&limit=15&ll=40.7243,-74.0018&query=\(search)"
-
-
+    func getCategories(search: String,lat:Double ,long: Double, completionHandler: @escaping (Result<Response, AppError>) -> Void) {
+        let urlStr = "https://api.foursquare.com/v2/venues/explore?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20180323&limit=15&ll=40.7243\(lat),-74.0018\(long)&query=\(search)"
+        
          guard let url = URL(string: urlStr) else {
              completionHandler(.failure(.badURL))
              return
@@ -87,12 +86,53 @@ final class APIManager {
                  completionHandler(.failure(error))
              case .success(let data):
                  do {
-                     let FlashCardWrapper = try JSONDecoder().decode(Location.self, from: data)
-                    completionHandler(.success(FlashCardWrapper.cards))
+                     let LocationWrapper = try JSONDecoder().decode(Location.self, from: data)
+                    completionHandler(.success(LocationWrapper.response))
                  } catch {
                      completionHandler(.failure(.couldNotParseJSON(rawError: error)))
                  }
              }
          }
      }
+}
+
+
+
+
+
+
+
+
+
+enum LocationFetchingError: Error {
+    case error(Error)
+    case noErrorMessage
+}
+
+class LocaleHelper {
+    private init() {}
+    
+    static let shared = LocaleHelper()
+    
+    func getLatLong(fromAddress address: String, completionHandler: @escaping (Result<(lat: Double, long: Double, name:String), LocationFetchingError>) -> Void) {
+        let geocoder = CLGeocoder()
+        DispatchQueue.global(qos: .userInitiated).async {
+            geocoder.geocodeAddressString(address){(placemarks, error) -> Void in
+                DispatchQueue.main.async {
+                    if let placemark = placemarks?.first, let coordinate = placemark.location?.coordinate, let name = placemark.locality  {
+                        print(name)
+                        completionHandler(.success((coordinate.latitude, coordinate.longitude, name)))
+                    } else {
+                        let locationError: LocationFetchingError
+                        if let error = error {
+                            locationError = .error(error)
+                        } else {
+                            locationError = .noErrorMessage
+                        }
+                        completionHandler(.failure(locationError))
+                    }
+                }
+            }
+        }
+    }
 }
