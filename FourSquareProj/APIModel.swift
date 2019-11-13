@@ -21,6 +21,22 @@ struct Response: Codable {
     let groups: [Group]
 }
 
+struct SuggestedBounds: Codable {
+    let ne, sw: Ne
+}
+// MARK: - Ne
+struct Ne: Codable {
+    let lat, lng: Double
+}
+
+
+// MARK: - Group
+struct Group: Codable {
+    let type, name: String
+    let items: [GroupItem]
+    let count: Int?
+}
+
 struct GroupItem: Codable {
     let reasons: Reasons
     let venue: Venue
@@ -31,22 +47,8 @@ struct Reasons: Codable {
     let count: Int
 }
 
-// MARK: - Group
-struct Group: Codable {
-    let type, name: String
-    let items: [GroupItem]
-    let count: Int?
-}
-
-struct SuggestedBounds: Codable {
-    let ne, sw: Ne
-}
-// MARK: - Ne
-struct Ne: Codable {
-    let lat, lng: Double
-}
-
 struct Venue: Codable {
+    let id: String
     let name: String
     let location: LocationClass
     let delivery: Delivery?
@@ -97,42 +99,30 @@ final class APIManager {
 }
 
 
-
-
-
-
-
-
-
-enum LocationFetchingError: Error {
-    case error(Error)
-    case noErrorMessage
-}
-
-class LocaleHelper {
+final class APIImageManager {
     private init() {}
+    static let shared = APIImageManager()
     
-    static let shared = LocaleHelper()
-    
-    func getLatLong(fromAddress address: String, completionHandler: @escaping (Result<(lat: Double, long: Double, name:String), LocationFetchingError>) -> Void) {
-        let geocoder = CLGeocoder()
-        DispatchQueue.global(qos: .userInitiated).async {
-            geocoder.geocodeAddressString(address){(placemarks, error) -> Void in
-                DispatchQueue.main.async {
-                    if let placemark = placemarks?.first, let coordinate = placemark.location?.coordinate, let name = placemark.locality  {
-                        print(name)
-                        completionHandler(.success((coordinate.latitude, coordinate.longitude, name)))
-                    } else {
-                        let locationError: LocationFetchingError
-                        if let error = error {
-                            locationError = .error(error)
-                        } else {
-                            locationError = .noErrorMessage
-                        }
-                        completionHandler(.failure(locationError))
-                    }
-                }
-            }
-        }
-    }
+    func getCategories(venueID: String, completionHandler: @escaping (Result<Responses, AppError>) -> Void) {
+        let urlStr = "https://api.foursquare.com/v2/venues/\(venueID)/photos?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20191113"
+        
+         guard let url = URL(string: urlStr) else {
+             completionHandler(.failure(.badURL))
+             return
+         }
+         
+         NetworkHelper.manager.performDataTask(withUrl: url, andMethod: .get) { (result) in
+             switch result {
+             case .failure(let error) :
+                 completionHandler(.failure(error))
+             case .success(let data):
+                 do {
+                     let ImageWrapper = try JSONDecoder().decode(Images.self, from: data)
+                    completionHandler(.success(ImageWrapper.response))
+                 } catch {
+                     completionHandler(.failure(.couldNotParseJSON(rawError: error)))
+                 }
+             }
+         }
+     }
 }

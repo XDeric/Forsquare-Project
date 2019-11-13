@@ -16,13 +16,14 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
             collectionOutlet.reloadData()
         }
     }
+    var picture = [Responses]()
   
     @IBOutlet weak var foodSearchBar: UISearchBar!
     @IBOutlet weak var locationSearchBar: UISearchBar!
     @IBOutlet weak var mapOutlet: MKMapView!
     @IBOutlet weak var collectionOutlet: UICollectionView!
     
-    
+    let searchRadius: CLLocationDistance = 2000
     var latitude = Double()
     var longitude = Double()
     private let locationManager = CLLocationManager()
@@ -39,15 +40,31 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     
     //MARK: CollectionView
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        food.count
+        5
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let foods = food[indexPath.row]
         guard let cell = collectionOutlet.dequeueReusableCell(withReuseIdentifier: "searchCell", for: indexPath) as? SearchCollectionViewCell else{return UICollectionViewCell()}
         
+        APIImageManager.shared.getCategories(venueID: foods.groups[0].items[0].venue.id) { (result) in
+            switch result{
+            case .failure(let error):
+                print(error)
+            case .success(let data):
+                self.picture = [data]
+            }
+        }
+        let url = "\(picture[indexPath.row].photos.items[0].itemPrefix)" + "500x500" + "\(picture[indexPath.row].photos.items[0].suffix)"
         
-        
+        ImageHelper.shared.getImage(urlStr: url) { (result) in
+            switch result{
+                case .failure(let error):
+                    print(error)
+                case .success(let image):
+                    cell.searcImageOutlet.image = image
+                }
+            }
         return cell
     }
     
@@ -76,11 +93,49 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
         locationSearchBar.resignFirstResponder()
     }
     
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+         //create activity indicator
+        let activityIndicator = UIActivityIndicatorView()
+        activityIndicator.center = self.view.center
+        activityIndicator.startAnimating()
+        self.view.addSubview(activityIndicator)
+        locationSearchBar.resignFirstResponder()
+        
+        //search request
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.naturalLanguageQuery = self.locationSearchString
+        let activeSearch = MKLocalSearch(request: searchRequest)
+        activeSearch.start { (response, error) in
+            activityIndicator.stopAnimating()
+            
+            if response == nil {
+                print(error)
+            } else {
+                //remove annotations
+                let annotations = self.mapOutlet.annotations
+                self.mapOutlet.removeAnnotations(annotations)
+                
+                //get data
+                self.latitude = response?.boundingRegion.center.latitude ?? 40.7243
+                self.longitude = response?.boundingRegion.center.longitude ?? -74.0018
+                
+                let newAnnotation = MKPointAnnotation()
+                newAnnotation.title = self.locationSearchString
+                newAnnotation.coordinate = CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
+                self.mapOutlet.addAnnotation(newAnnotation)
+                
+                //to zoom in the annotation
+                let coordinateRegion = MKCoordinateRegion.init(center: newAnnotation.coordinate, latitudinalMeters: self.searchRadius * 2.0, longitudinalMeters: self.searchRadius * 2.0)
+                self.mapOutlet.setRegion(coordinateRegion, animated: true)
+            }
+        }
+    }
     
     
+    //MARK: other Stuff
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        loadLatLong()
+        //loadLatLong()
         loadData()
     }
     
@@ -93,17 +148,17 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
         // Do any additional setup after loading the view.
     }
     
-    func loadLatLong(){
-        LocaleHelper.shared.getLatLong(fromAddress: locationSearchString ?? "New York") { (result) in
-            switch result {
-            case .failure(let error):
-                print(error)
-            case .success(let lat, let long, let name):
-                self.latitude = lat
-                self.longitude = long
-            }
-        }
-    }
+//    func loadLatLong(){
+//        LocaleHelper.shared.getLatLong(fromAddress: locationSearchString ?? "New York") { (result) in
+//            switch result {
+//            case .failure(let error):
+//                print(error)
+//            case .success(let lat, let long, let name):
+//                self.latitude = lat
+//                self.longitude = long
+//            }
+//        }
+//    }
     
     func loadData(){
         APIManager.shared.getCategories(search: foodSearchString ?? "chinese dumplings", lat: latitude, long: longitude) { (result) in
@@ -115,6 +170,9 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
             }
         }
     }
+    
+    
+    
 
 
 }

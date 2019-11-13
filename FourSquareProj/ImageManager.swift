@@ -9,6 +9,37 @@
 import Foundation
 import UIKit
 
+
+struct Images: Codable {
+    let response: Responses
+}
+
+// MARK: - Response
+struct Responses: Codable {
+    let photos: Photos
+}
+
+// MARK: - Photos
+struct Photos: Codable {
+    let count: Int
+    let items: [Item]
+    let dupesRemoved: Int
+}
+
+// MARK: - Item
+struct Item: Codable {
+    let itemPrefix: String
+    let suffix: String
+    let width, height: Int
+}
+
+
+
+
+
+
+
+
 class ImageHelper {
     
     private init() {}
@@ -41,3 +72,4 @@ class ImageHelper {
             }.resume()
     }
 }
+
