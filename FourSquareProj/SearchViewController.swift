@@ -11,25 +11,31 @@ import MapKit
 
 class SearchViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UISearchBarDelegate, CLLocationManagerDelegate, MKMapViewDelegate {
     
-    var food = [Response](){
+    var food = [LocationClass](){
+        didSet{
+            collectionOutlet.reloadData()
+            print(food)
+        }
+    }
+    var picture = [Item]() {
         didSet{
             collectionOutlet.reloadData()
         }
     }
-    var picture = [Responses]()
-  
+    
     @IBOutlet weak var foodSearchBar: UISearchBar!
     @IBOutlet weak var locationSearchBar: UISearchBar!
     @IBOutlet weak var mapOutlet: MKMapView!
     @IBOutlet weak var collectionOutlet: UICollectionView!
     
     let searchRadius: CLLocationDistance = 2000
-    var latitude = Double()
-    var longitude = Double()
+    var latitude = 40.7243
+    var longitude = -74.0018
     private let locationManager = CLLocationManager()
+    
     var foodSearchString: String? = nil {
         didSet{
-            //mapView.addAnnotations(food.filter{$0.hasValidCoordinates})
+            loadData()
         }
     }
     var locationSearchString: String? = nil {
@@ -40,31 +46,30 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     
     //MARK: CollectionView
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        5
+        print("yoooo\(food.count)")
+        return food.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 414, height: 128)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let foods = food[indexPath.row]
+        let pic = food[indexPath.row]
         guard let cell = collectionOutlet.dequeueReusableCell(withReuseIdentifier: "searchCell", for: indexPath) as? SearchCollectionViewCell else{return UICollectionViewCell()}
-        
-        APIImageManager.shared.getCategories(venueID: foods.groups[0].items[0].venue.id) { (result) in
-            switch result{
-            case .failure(let error):
-                print(error)
-            case .success(let data):
-                self.picture = [data]
-            }
-        }
-        let url = "\(picture[indexPath.row].photos.items[0].itemPrefix)" + "500x500" + "\(picture[indexPath.row].photos.items[0].suffix)"
-        
-        ImageHelper.shared.getImage(urlStr: url) { (result) in
-            switch result{
+//        let url = "\(pic.prefix)147x128\(pic.suffix)"
+        ImageHelper.shared.getImage(urlStr: "") { (result) in
+            DispatchQueue.main.async {
+                switch result{
                 case .failure(let error):
                     print(error)
+                    cell.searcImageOutlet.image = UIImage(named: "noPic")
                 case .success(let image):
                     cell.searcImageOutlet.image = image
                 }
             }
+        }
+        
         return cell
     }
     
@@ -75,8 +80,8 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
         } else {
             collectionOutlet.isHidden = true
         }
-        foodSearchString = foodSearchBar.text
-        locationSearchString = locationSearchBar.text
+        //        foodSearchString = foodSearchBar.text
+        //        locationSearchString = locationSearchBar.text
     }
     
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
@@ -94,39 +99,53 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-         //create activity indicator
-        let activityIndicator = UIActivityIndicatorView()
-        activityIndicator.center = self.view.center
-        activityIndicator.startAnimating()
-        self.view.addSubview(activityIndicator)
-        locationSearchBar.resignFirstResponder()
-        
-        //search request
-        let searchRequest = MKLocalSearch.Request()
-        searchRequest.naturalLanguageQuery = self.locationSearchString
-        let activeSearch = MKLocalSearch(request: searchRequest)
-        activeSearch.start { (response, error) in
-            activityIndicator.stopAnimating()
-            
-            if response == nil {
-                print(error)
+        switch searchBar {
+        case foodSearchBar:
+            if let foodText = foodSearchBar.text, foodText != "" {
+                collectionOutlet.isHidden = false
             } else {
-                //remove annotations
-                let annotations = self.mapOutlet.annotations
-                self.mapOutlet.removeAnnotations(annotations)
+                collectionOutlet.isHidden = true
+            }
+            foodSearchString = foodSearchBar.text
+            locationSearchString = locationSearchBar.text
+        default:
+            
+            
+            //create activity indicator
+            let activityIndicator = UIActivityIndicatorView()
+            activityIndicator.center = self.view.center
+            activityIndicator.startAnimating()
+            self.view.addSubview(activityIndicator)
+            locationSearchBar.resignFirstResponder()
+            
+            //search request
+            let searchRequest = MKLocalSearch.Request()
+            searchRequest.naturalLanguageQuery = self.locationSearchString
+            let activeSearch = MKLocalSearch(request: searchRequest)
+            activeSearch.start { (response, error) in
+                activityIndicator.stopAnimating()
                 
-                //get data
-                self.latitude = response?.boundingRegion.center.latitude ?? 40.7243
-                self.longitude = response?.boundingRegion.center.longitude ?? -74.0018
-                
-                let newAnnotation = MKPointAnnotation()
-                newAnnotation.title = self.locationSearchString
-                newAnnotation.coordinate = CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
-                self.mapOutlet.addAnnotation(newAnnotation)
-                
-                //to zoom in the annotation
-                let coordinateRegion = MKCoordinateRegion.init(center: newAnnotation.coordinate, latitudinalMeters: self.searchRadius * 2.0, longitudinalMeters: self.searchRadius * 2.0)
-                self.mapOutlet.setRegion(coordinateRegion, animated: true)
+                if response == nil {
+                    print(error)
+                } else {
+                    //remove annotations
+                    let annotations = self.mapOutlet.annotations
+                    self.mapOutlet.removeAnnotations(annotations)
+                    
+                    //get data
+                    self.latitude = response?.boundingRegion.center.latitude ?? 40.7243
+                    self.longitude = response?.boundingRegion.center.longitude ?? -74.0018
+                    
+                    let newAnnotation = MKPointAnnotation()
+                    newAnnotation.title = self.locationSearchString
+                    newAnnotation.coordinate = CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
+                    self.mapOutlet.addAnnotation(newAnnotation)
+                    
+                    //to zoom in the annotation
+                    let coordinateRegion = MKCoordinateRegion.init(center: newAnnotation.coordinate, latitudinalMeters: self.searchRadius * 2.0, longitudinalMeters: self.searchRadius * 2.0)
+                    self.mapOutlet.setRegion(coordinateRegion, animated: true)
+                    self.loadData()
+                }
             }
         }
     }
@@ -136,43 +155,90 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         //loadLatLong()
-        loadData()
+        //loadData()
+        locationManager.delegate = self
+        locationAuthorization()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         foodSearchBar.delegate = self
         locationSearchBar.delegate = self
-        locationManager.delegate = self
         mapOutlet.delegate = self
+        collectionOutlet.dataSource = self
+        collectionOutlet.delegate = self
+        mapOutlet.userTrackingMode = .follow
         // Do any additional setup after loading the view.
     }
     
-//    func loadLatLong(){
-//        LocaleHelper.shared.getLatLong(fromAddress: locationSearchString ?? "New York") { (result) in
-//            switch result {
-//            case .failure(let error):
-//                print(error)
-//            case .success(let lat, let long, let name):
-//                self.latitude = lat
-//                self.longitude = long
-//            }
-//        }
-//    }
+    
+    //MARK: Location
+    private func locationAuthorization() {
+        let status = CLLocationManager.authorizationStatus()
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            mapOutlet.showsUserLocation = true
+            locationManager.delegate = self
+            locationManager.requestLocation()
+            locationManager.startUpdatingLocation()
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        default:
+            locationManager.requestWhenInUseAuthorization()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("New location: \(locations)")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        print("Authorozation status changed to \(status.rawValue)")
+        
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        //Call a function to get the current location
+        default:
+            break
+        }
+        
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Error: \(error)")
+    }
     
     func loadData(){
-        APIManager.shared.getCategories(search: foodSearchString ?? "chinese dumplings", lat: latitude, long: longitude) { (result) in
-            switch result {
-            case .failure(let error):
-                print(error)
-            case .success(let food):
-                self.food = [food]
+        DispatchQueue.main.async {
+            
+            APIManager.shared.getCategories(search: self.foodSearchString ?? "", lat: self.latitude, long: self.longitude) { (result) in
+                switch result {
+                case .failure(let error):
+                    print(error)
+                    print("heeeeee")
+                case .success(let food):
+                    self.food = food
+                    print(":hahahah")
+                    food.forEach { (item) in
+                        APIImageManager.shared.getImage(venueID: item.id) { (result) in
+                            switch result{
+                            case .failure(let error):
+                                print(error)
+                                print("heeeeeed")
+                            case .success(let data):
+                                print("yooooooo")
+                                self.picture = data
+                            }
+                        }
+                    }
+                
+                }
             }
         }
     }
     
     
     
-
-
+    
+    
 }

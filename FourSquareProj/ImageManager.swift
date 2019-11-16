@@ -28,16 +28,39 @@ struct Photos: Codable {
 
 // MARK: - Item
 struct Item: Codable {
-    let itemPrefix: String
+    let prefix: String
     let suffix: String
     let width, height: Int
 }
 
-
-
-
-
-
+final class APIImageManager {
+    private init() {}
+    static let shared = APIImageManager()
+    
+    func getImage(venueID: String, completionHandler: @escaping (Result<[Item], AppError>) -> Void) {
+        let urlStr = "https://api.foursquare.com/v2/venues/\(venueID)/photos?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20191113"
+        
+        
+         guard let url = URL(string: urlStr) else {
+             completionHandler(.failure(.badURL))
+             return
+         }
+         
+         NetworkHelper.manager.performDataTask(withUrl: url, andMethod: .get) { (result) in
+             switch result {
+             case .failure(let error) :
+                 completionHandler(.failure(error))
+             case .success(let data):
+                 do {
+                     let ImageWrapper = try JSONDecoder().decode(Images.self, from: data)
+                    completionHandler(.success(ImageWrapper.response.photos.items))
+                 } catch {
+                     completionHandler(.failure(.couldNotParseJSON(rawError: error)))
+                 }
+             }
+         }
+     }
+}
 
 
 class ImageHelper {
