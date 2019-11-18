@@ -11,27 +11,37 @@ import MapKit
 
 class SearchViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UISearchBarDelegate, CLLocationManagerDelegate, MKMapViewDelegate {
     
-    var food = [LocationClass](){
-        didSet{
-            collectionOutlet.reloadData()
-            print(food)
-        }
-    }
-    var picture = [Item]() {
-        didSet{
-            collectionOutlet.reloadData()
-        }
-    }
+    var annotations = [MKAnnotation]()
     
     @IBOutlet weak var foodSearchBar: UISearchBar!
     @IBOutlet weak var locationSearchBar: UISearchBar!
     @IBOutlet weak var mapOutlet: MKMapView!
     @IBOutlet weak var collectionOutlet: UICollectionView!
+
     
     let searchRadius: CLLocationDistance = 2000
     var latitude = 40.7243
     var longitude = -74.0018
     private let locationManager = CLLocationManager()
+    
+    var food = [LocationClass](){
+        didSet{
+            collectionOutlet.reloadData()
+            food.forEach { (location) in
+                    let annotation = MKPointAnnotation()
+                    annotation.title = location.name
+                    annotation.coordinate = location.coordinate
+                    annotations.append(annotation)
+                    mapOutlet.addAnnotation(annotation)
+                }
+                self.mapOutlet.showAnnotations(self.annotations, animated: true)
+            }
+        }
+    var picture = [Item]() {
+        didSet{
+            collectionOutlet.reloadData()
+        }
+    }
     
     var foodSearchString: String? = nil {
         didSet{
@@ -46,8 +56,7 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     
     //MARK: CollectionView
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        print("yoooo\(food.count)")
-        return food.count
+        return picture.count
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -55,22 +64,35 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let pic = food[indexPath.row]
+        //let pic = picture[indexPath.row]
+        let foods = food[indexPath.row]
+        let pic = picture[indexPath.row]
         guard let cell = collectionOutlet.dequeueReusableCell(withReuseIdentifier: "searchCell", for: indexPath) as? SearchCollectionViewCell else{return UICollectionViewCell()}
-//        let url = "\(pic.prefix)147x128\(pic.suffix)"
-        ImageHelper.shared.getImage(urlStr: "") { (result) in
-            DispatchQueue.main.async {
-                switch result{
-                case .failure(let error):
-                    print(error)
-                    cell.searcImageOutlet.image = UIImage(named: "noPic")
-                case .success(let image):
-                    cell.searcImageOutlet.image = image
+        
+        //make data into uiimage
+        let url = "\(pic.prefix)147x128\(pic.suffix)"
+            ImageHelper.shared.getImage(urlStr: url) { (result) in
+                DispatchQueue.main.async {
+                    switch result{
+                    case .failure(let error):
+                        print(error)
+                        cell.searcImageOutlet.image = UIImage(named: "noPic")
+                    case .success(let image):
+                        cell.searcImageOutlet.image = image
+                    }
                 }
             }
-        }
+        
         
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let annotation = annotations[indexPath.row]
+        mapOutlet.showAnnotations([annotation], animated: true)
+        mapOutlet.selectAnnotation(annotation, animated: true)
+        foodSearchBar.resignFirstResponder()
+        locationSearchBar.resignFirstResponder()
     }
     
     //MARK: SearchBar
@@ -144,14 +166,14 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
                     //to zoom in the annotation
                     let coordinateRegion = MKCoordinateRegion.init(center: newAnnotation.coordinate, latitudinalMeters: self.searchRadius * 2.0, longitudinalMeters: self.searchRadius * 2.0)
                     self.mapOutlet.setRegion(coordinateRegion, animated: true)
-                    self.loadData()
+                    //self.loadData()
                 }
             }
         }
     }
     
     
-    //MARK: other Stuff
+    //MARK: Delegates and pre-loads
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         //loadLatLong()
@@ -169,6 +191,31 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
         collectionOutlet.delegate = self
         mapOutlet.userTrackingMode = .follow
         // Do any additional setup after loading the view.
+    }
+    
+    func loadData(){
+        DispatchQueue.main.async {
+            
+            APIManager.shared.getCategories(search: self.foodSearchString ?? "pizza", lat: self.latitude, long: self.longitude) { (result) in
+                switch result {
+                case .failure(let error):
+                    print(error)
+                case .success(let food):
+                    self.food = food
+                    food.forEach { (item) in
+                        APIImageManager.shared.getImage(venueID: item.id) { (result) in
+                            switch result{
+                            case .failure(let error):
+                                print(error)
+                            case .success(let data):
+                                self.picture = data
+                            }
+                        }
+                    }
+                
+                }
+            }
+        }
     }
     
     
@@ -208,37 +255,21 @@ class SearchViewController: UIViewController, UICollectionViewDataSource, UIColl
         print("Error: \(error)")
     }
     
-    func loadData(){
-        DispatchQueue.main.async {
-            
-            APIManager.shared.getCategories(search: self.foodSearchString ?? "", lat: self.latitude, long: self.longitude) { (result) in
-                switch result {
-                case .failure(let error):
-                    print(error)
-                    print("heeeeee")
-                case .success(let food):
-                    self.food = food
-                    print(":hahahah")
-                    food.forEach { (item) in
-                        APIImageManager.shared.getImage(venueID: item.id) { (result) in
-                            switch result{
-                            case .failure(let error):
-                                print(error)
-                                print("heeeeeed")
-                            case .success(let data):
-                                print("yooooooo")
-                                self.picture = data
-                            }
-                        }
-                    }
-                
-                }
-            }
+    
+    //MARK: pass data to tableview
+    @IBAction func listButton(_ sender: UIBarButtonItem) {
+        if annotations.isEmpty{
+            let alert = UIAlertController(title: "Not available", message: "your search is empty", preferredStyle: .alert)
+            let cancel = UIAlertAction.init(title: "Ok", style: .cancel, handler: nil)
+            alert.addAction(cancel)
+            present(alert, animated: true)
+        }else {
+            let TableVC = storyboard?.instantiateViewController(identifier: "table")as! TableListViewController
+            TableVC.venues = food
+            self.navigationController?.pushViewController(TableVC, animated: true)
         }
+        
     }
-    
-    
-    
     
     
 }

@@ -39,7 +39,7 @@ final class APIImageManager {
     
     func getImage(venueID: String, completionHandler: @escaping (Result<[Item], AppError>) -> Void) {
         let urlStr = "https://api.foursquare.com/v2/venues/\(venueID)/photos?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20191113"
-        
+        //print(urlStr)
         
          guard let url = URL(string: urlStr) else {
              completionHandler(.failure(.badURL))

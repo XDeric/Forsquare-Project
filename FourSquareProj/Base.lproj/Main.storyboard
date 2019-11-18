@@ -143,6 +143,7 @@
                     <navigationItem key="navigationItem" id="3Ie-H7-vHY">
                         <barButtonItem key="rightBarButtonItem" title="Item" image="line.horizontal.3" catalog="system" id="0h9-W7-gh1">
                             <connections>
+                                <action selector="listButton:" destination="7Tz-y5-4xu" id="BKV-Yu-RbY"/>
                                 <segue destination="KH4-lA-bHk" kind="show" id="4BF-yC-s9m"/>
                             </connections>
                         </barButtonItem>
@@ -158,10 +159,10 @@
             </objects>
             <point key="canvasLocation" x="571.01449275362324" y="-102.45535714285714"/>
         </scene>
-        <!--View Controller-->
+        <!--Table List View Controller-->
         <scene sceneID="DtH-Uw-Z2A">
             <objects>
-                <viewController id="KH4-lA-bHk" sceneMemberID="viewController">
+                <viewController id="KH4-lA-bHk" customClass="TableListViewController" customModule="FourSquareProj" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Hbw-RX-rZf">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -171,7 +172,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="detailCell" rowHeight="137" id="BEc-s0-hPj">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="listCell" rowHeight="137" id="BEc-s0-hPj">
                                         <rect key="frame" x="0.0" y="28" width="414" height="137"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="BEc-s0-hPj" id="mU6-lz-MEW">

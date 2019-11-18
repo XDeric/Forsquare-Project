@@ -46,7 +46,7 @@ final class APIManager {
     
     func getCategories(search: String,lat:Double ,long: Double, completionHandler: @escaping (Result<[LocationClass], AppError>) -> Void) {
         let urlStr = "https://api.foursquare.com/v2/venues/search?client_id=\(Secrets.clientId)&client_secret=\(Secrets.clientSecret)&v=20191114&limit=2&ll=\(lat),\(long)&query=\(search)"
-        print(urlStr)
+        //print(urlStr)
          guard let url = URL(string: urlStr) else {
              completionHandler(.failure(.badURL))
              return
